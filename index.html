@@ -172,7 +172,7 @@
         // 🔴 IMPORTANTE: COLOCA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APPS SCRIPT
         // Ejemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
         // ==========================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEj8oRweDYACung6z3IBITVCpQjefEjfm3yjPkAszOz39yYD60Y64DDxGxa5FgIMWFpw/exec'; 
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoFhW0IYu0akk-YuOfzsCWnBIwiUinidixpoS3fWlJIIWEUUdvlF0CtPw8DDICz8mK7A/exec'; 
 
         // Definición de las 5 Candidatas (Puedes cambiar los logos aquí)
         const candidates = [
@@ -225,8 +225,7 @@
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    redirect: 'follow',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    // Eliminamos headers y redirect para evitar bloqueos de CORS (Cross-Origin)
                     body: JSON.stringify({ action: 'getPadron' })
                 });
 
@@ -396,8 +395,7 @@
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    redirect: 'follow',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    // Eliminamos headers y redirect para evitar bloqueos de CORS
                     body: JSON.stringify({ 
                         action: 'vote', 
                         dni: selectedStudent.dni, 
