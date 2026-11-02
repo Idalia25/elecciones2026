@@ -54,8 +54,26 @@
     <!-- Main Content Area -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center relative">
         
+        <!-- PANTALLA 0: BLOQUEO DE SEGURIDAD (SOLO DOCENTES) -->
+        <div id="screen-locked" class="w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-gray-800">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-lock text-5xl text-gray-700 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800">Mesa de Votación Cerrada</h2>
+                <p class="text-gray-500 mt-2">Este equipo no está autorizado para registrar votos o la sesión no ha iniciado.</p>
+            </div>
+            <div class="max-w-xs mx-auto text-center mt-6">
+                <p class="text-xs text-gray-400 font-bold uppercase mb-2">Acceso exclusivo docentes</p>
+                <input type="password" id="adminPassword" placeholder="Contraseña de autorización" 
+                    class="w-full text-center px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-800 mb-4">
+                <button onclick="unlockStation()" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-6 rounded-xl transition shadow-lg">
+                    Habilitar Equipo
+                </button>
+                <p id="lockError" class="text-colegio-rojo text-sm font-bold mt-3 hidden">Contraseña incorrecta</p>
+            </div>
+        </div>
+
         <!-- PANTALLA 1: INGRESO DE DNI -->
-        <div id="screen-dni" class="w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-azul">
+        <div id="screen-dni" class="hidden w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-azul">
             <div class="text-center mb-6">
                 <i class="fa-solid fa-id-card text-5xl text-colegio-azul mb-4"></i>
                 <h2 class="text-3xl font-bold text-gray-800">Bienvenida Estudiante</h2>
@@ -170,9 +188,12 @@
     <script>
         // ==========================================
         // 🔴 IMPORTANTE: COLOCA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APPS SCRIPT
-        // Ejemplo: 'https://script.google.com/macros/s/AKfycbxuUCmnBoDwKy6JXFuesajJh3Twbwpw1jv4D-PhZoyCDprCSImgttxS18_pFUZUGSSdVg/exec'
+        // Ejemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
         // ==========================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuUCmnBoDwKy6JXFuesajJh3Twbwpw1jv4D-PhZoyCDprCSImgttxS18_pFUZUGSSdVg/exec'; 
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMJkl-XxJefcaFWbjen1I0CwFFCjQeFLzOpNimDtVSkXdZ6lJTEN9IedUrRvUKdUK6og/exec'; 
+
+        // 🔒 CONTRASEÑA SECRETA DEL DOCENTE PARA HABILITAR EL EQUIPO
+        const ADMIN_PASSWORD = 'snm2026';
 
         // Definición de las 5 Candidatas (Puedes cambiar los logos aquí)
         const candidates = [
@@ -318,10 +339,41 @@
         // --- FUNCIONES DE NAVEGACIÓN Y UI ---
 
         function showScreen(screenId) {
+            document.getElementById('screen-locked').classList.add('hidden');
             document.getElementById('screen-dni').classList.add('hidden');
             document.getElementById('screen-verify').classList.add('hidden');
             document.getElementById('screen-ballot').classList.add('hidden');
             document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Funciones de Seguridad de Mesa
+        function checkSecurity() {
+            // Verifica si el equipo actual ya fue desbloqueado previamente por el profesor
+            if (localStorage.getItem('mesa_autorizada') === 'true') {
+                resetSystem();
+            } else {
+                showScreen('screen-locked');
+            }
+        }
+
+        function unlockStation() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === ADMIN_PASSWORD) {
+                // Guardar la autorización en la memoria del navegador del colegio
+                localStorage.setItem('mesa_autorizada', 'true');
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('lockError').classList.add('hidden');
+                resetSystem();
+            } else {
+                document.getElementById('lockError').classList.remove('hidden');
+            }
+        }
+
+        // Opción oculta: Para que el profe pueda volver a bloquear la máquina al final del día
+        // (Se puede llamar desde la consola del navegador escribiendo lockStation() )
+        function lockStation() {
+            localStorage.removeItem('mesa_autorizada');
+            showScreen('screen-locked');
         }
 
         function resetSystem() {
@@ -421,7 +473,7 @@
 
         // Inicializar el sistema al cargar
         window.onload = () => {
-            resetSystem();
+            checkSecurity(); // Primero revisa si la máquina está desbloqueada
         };
     </script>
 </body>
