@@ -172,7 +172,7 @@
         // 🔴 IMPORTANTE: COLOCA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APPS SCRIPT
         // Ejemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
         // ==========================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyST2VuffzT9HiXw8Axs4Gt0CH-IgmjKqZI-qcCGrc_JMRV1K5HMjE_LmLdXlEnnwzlyw/exec'; 
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTkU5N_vp16UXwN54dMjN8oofbIrmBjjXFEyeH1uX6QBkbksNdc8DW9hJGNmQ5uCfEIw/exec'; 
 
         // Definición de las 5 Candidatas (Puedes cambiar los logos aquí)
         const candidates = [
@@ -211,36 +211,42 @@
         async function fetchPadron() {
             const loading = document.getElementById('loadingDni');
             const loadingText = document.getElementById('loadingText');
-            loadingText.innerText = "Cargando padrón electoral...";
+            loadingText.innerText = "Conectando con Google Sheets...";
             loading.classList.remove('hidden');
 
-            // Si la URL no ha sido configurada aún, cargamos datos de demostración
             if (!isValidUrl(APPS_SCRIPT_URL)) {
-                console.warn("APPS_SCRIPT_URL no es una URL válida. Cargando padrón de prueba.");
+                console.warn("URL no válida. Modo prueba.");
                 padronData = mockPadronData;
                 loading.classList.add('hidden');
                 return;
             }
 
             try {
+                // Enviar petición sin cabeceras complejas para evitar bloqueos CORS
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    // Eliminamos headers y redirect para evitar bloqueos de CORS (Cross-Origin)
                     body: JSON.stringify({ action: 'getPadron' })
                 });
 
-                const result = await response.json();
-
-                if (result.success) {
-                    padronData = result.padron;
-                } else {
-                    // AHORA MOSTRARÁ EL ERROR EXACTO QUE ENVÍA GOOGLE
-                    showError("Error de Google Sheets: " + result.message);
+                // Leemos como texto primero por si Google devuelve un error en HTML
+                const textResponse = await response.text();
+                
+                try {
+                    const result = JSON.parse(textResponse);
+                    if (result.success) {
+                        padronData = result.padron;
+                        document.getElementById('dniError').classList.add('hidden');
+                    } else {
+                        showError("Error en tu Base de Datos: " + result.message);
+                    }
+                } catch (parseError) {
+                    console.error("Respuesta de Google no es JSON:", textResponse);
+                    showError("Error de permisos. Asegúrate de publicar el script para 'Cualquier persona'.");
                 }
             } catch (error) {
-                console.error(error);
-                showError("No se pudo conectar con el servidor. Usando datos de prueba.");
-                padronData = mockPadronData;
+                console.error("Error de Red:", error);
+                showError("Fallo de red o CORS: " + error.message);
+                padronData = mockPadronData; // Cargar prueba para no bloquear a la estudiante
             } finally {
                 loading.classList.add('hidden');
             }
@@ -377,18 +383,11 @@
             buttons.classList.add('hidden');
             loading.classList.remove('hidden');
 
-            // Si no hay URL válida, simulamos el envío exitoso (modo demo)
             if (!isValidUrl(APPS_SCRIPT_URL)) {
                 setTimeout(() => {
                     closeConfirmModal();
                     document.getElementById('successModal').classList.remove('hidden');
-                    
-                    setTimeout(() => {
-                        document.getElementById('successModal').classList.add('hidden');
-                        resetSystem();
-                        buttons.classList.remove('hidden');
-                        loading.classList.add('hidden');
-                    }, 3000);
+                    setTimeout(() => { document.getElementById('successModal').classList.add('hidden'); resetSystem(); buttons.classList.remove('hidden'); loading.classList.add('hidden'); }, 3000);
                 }, 1000);
                 return;
             }
@@ -396,27 +395,18 @@
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    // Eliminamos headers y redirect para evitar bloqueos de CORS
-                    body: JSON.stringify({ 
-                        action: 'vote', 
-                        dni: selectedStudent.dni, 
-                        candidate: selectedCandidate.name 
-                    })
+                    body: JSON.stringify({ action: 'vote', dni: selectedStudent.dni, candidate: selectedCandidate.name })
                 });
 
-                const result = await response.json();
+                const textResponse = await response.text();
+                const result = JSON.parse(textResponse);
 
                 if (result.success) {
                     closeConfirmModal();
                     document.getElementById('successModal').classList.remove('hidden');
-                    
-                    setTimeout(() => {
-                        document.getElementById('successModal').classList.add('hidden');
-                        resetSystem();
-                    }, 3500);
-
+                    setTimeout(() => { document.getElementById('successModal').classList.add('hidden'); resetSystem(); }, 3500);
                 } else {
-                    alert("Error: " + result.message);
+                    alert("Error al votar: " + result.message);
                     closeConfirmModal();
                     resetSystem();
                 }
