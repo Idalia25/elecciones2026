@@ -172,7 +172,7 @@
         // 🔴 IMPORTANTE: COLOCA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APPS SCRIPT
         // Ejemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
         // ==========================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoFhW0IYu0akk-YuOfzsCWnBIwiUinidixpoS3fWlJIIWEUUdvlF0CtPw8DDICz8mK7A/exec'; 
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyST2VuffzT9HiXw8Axs4Gt0CH-IgmjKqZI-qcCGrc_JMRV1K5HMjE_LmLdXlEnnwzlyw/exec'; 
 
         // Definición de las 5 Candidatas (Puedes cambiar los logos aquí)
         const candidates = [
@@ -234,7 +234,8 @@
                 if (result.success) {
                     padronData = result.padron;
                 } else {
-                    showError("Error al cargar padrón.");
+                    // AHORA MOSTRARÁ EL ERROR EXACTO QUE ENVÍA GOOGLE
+                    showError("Error de Google Sheets: " + result.message);
                 }
             } catch (error) {
                 console.error(error);
