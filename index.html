@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elecciones Municipales - I.E. Santísima Niña María</title>
+    <!-- Tailwind CSS para diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'colegio-azul': '#1e3a8a', /* Azul Institucional */
+                        'colegio-rojo': '#b91c1c', /* Rojo Institucional */
+                        'colegio-dorado': '#d97706', /* Dorado/Oro Institucional */
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Loading Spinner */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a8a; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Institucional -->
+    <header class="bg-colegio-azul text-white shadow-lg border-b-4 border-colegio-dorado py-4">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-center md:text-left">
+            <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT84AucLBAmz5IjYkRg4z2n66uFYLRtHuowf-UxYb513CzrxmkZ1E4Tsq8&s=10" alt="Insignia Colegio" class="h-16 w-16 bg-white rounded-full p-1 shadow-md">
+                <div>
+                    <h1 class="text-2xl font-bold uppercase tracking-wider">I.E. Santísima Niña María</h1>
+                    <h2 class="text-sm text-colegio-dorado font-semibold italic">"La Niña María nuestro camino; el éxito, nuestro destino"</h2>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold bg-colegio-rojo px-4 py-2 rounded-lg shadow-inner">Elecciones Municipales Escolares</h3>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center relative">
+        
+        <!-- PANTALLA 1: INGRESO DE DNI -->
+        <div id="screen-dni" class="w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-azul">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-id-card text-5xl text-colegio-azul mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800">Bienvenida Estudiante</h2>
+                <p class="text-gray-500 mt-2">Empieza a escribir tu DNI o tus Nombres para buscarte en el padrón.</p>
+            </div>
+            
+            <div class="max-w-md mx-auto relative">
+                <div class="mb-2 relative">
+                    <input type="text" id="dniInput" placeholder="Busca por DNI o Nombre..." autocomplete="off"
+                        oninput="onSearchInput(this.value)"
+                        class="w-full text-center text-2xl font-bold px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-colegio-azul focus:ring-4 focus:ring-blue-100 transition shadow-inner">
+                    <i class="fa-solid fa-search absolute right-4 top-5 text-gray-400 text-xl"></i>
+                </div>
+
+                <!-- Lista Desplegable Autocompletada -->
+                <div id="searchResults" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-gray-100">
+                    <!-- Los resultados coincidentes se insertarán aquí por JavaScript -->
+                </div>
+
+                <div id="dniError" class="text-colegio-rojo text-center my-3 hidden font-semibold text-sm"></div>
+
+                <div id="loadingDni" class="mt-4 text-center">
+                    <div class="loader"></div>
+                    <p class="text-gray-500 mt-2 font-medium" id="loadingText">Cargando padrón electoral...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA 2: DATOS DEL ESTUDIANTE -->
+        <div id="screen-verify" class="hidden w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-dorado">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-user-check text-5xl text-green-600 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800">Verifica tus Datos</h2>
+            </div>
+            
+            <div class="bg-gray-50 border-l-4 border-colegio-azul p-6 rounded-r-lg max-w-lg mx-auto mb-8 shadow-sm">
+                <p class="text-sm text-gray-500 font-bold uppercase mb-1">Nombre Completo</p>
+                <p id="studentName" class="text-2xl font-bold text-colegio-azul mb-4">Ana Pérez García</p>
+                <div class="flex gap-8">
+                    <div>
+                        <p class="text-sm text-gray-500 font-bold uppercase mb-1">Grado</p>
+                        <p id="studentGrade" class="text-xl font-bold text-gray-800">4to</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-bold uppercase mb-1">Sección</p>
+                        <p id="studentSection" class="text-xl font-bold text-gray-800">"B"</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-center gap-4">
+                <button onclick="resetSystem()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition">
+                    <i class="fa-solid fa-xmark mr-2"></i> No soy yo
+                </button>
+                <button onclick="showBallot()" class="bg-colegio-rojo hover:bg-red-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                    Ir a la Cédula de Votación <i class="fa-solid fa-check ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 3: CÉDULA DE VOTACIÓN -->
+        <div id="screen-ballot" class="hidden w-full bg-white rounded-2xl shadow-2xl p-6 md:p-8 fade-in border-t-8 border-colegio-rojo">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-colegio-azul uppercase">Cédula de Sufragio</h2>
+                <p class="text-gray-600 mt-2">Selecciona el logo del partido político de tu preferencia.</p>
+            </div>
+            
+            <!-- Grid de Candidatas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="candidatesGrid">
+                <!-- Las tarjetas de candidatas se generan por JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de Confirmación -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden fade-in backdrop-blur-sm px-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-b-8 border-colegio-dorado">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">¿Confirmar Voto?</h3>
+            <p class="text-gray-600 mb-6">Estás a punto de emitir tu voto por el partido:</p>
+            
+            <div class="bg-blue-50 p-4 rounded-xl mb-8 flex flex-col items-center border border-blue-100">
+                <img id="confirmLogo" src="" alt="Logo" class="w-20 h-20 object-contain mb-2">
+                <p id="confirmName" class="font-bold text-xl text-colegio-azul"></p>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="closeConfirmModal()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition">
+                    Cambiar Voto
+                </button>
+                <button id="btnSubmitVote" onclick="submitVote()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex justify-center items-center">
+                    <span>Sí, Emitir Voto</span>
+                </button>
+            </div>
+            
+            <div id="loadingVote" class="hidden mt-4 text-center">
+                <div class="loader"></div>
+                <p class="text-gray-500 mt-2 font-medium">Procesando voto de forma segura...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Éxito -->
+    <div id="successModal" class="fixed inset-0 bg-colegio-azul flex flex-col items-center justify-center z-50 hidden fade-in px-4">
+        <i class="fa-solid fa-check-circle text-8xl text-colegio-dorado mb-6"></i>
+        <h2 class="text-4xl font-bold text-white text-center mb-2">¡Voto Registrado!</h2>
+        <p class="text-blue-200 text-xl text-center mb-8">Tu participación fortalece nuestra democracia escolar.</p>
+        <div class="text-white text-lg animate-pulse">Preparando sistema para el siguiente estudiante...</div>
+    </div>
+
+    <!-- SCRIPT DE LÓGICA -->
+    <script>
+        // ==========================================
+        // 🔴 IMPORTANTE: COLOCA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APPS SCRIPT
+        // Ejemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
+        // ==========================================
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEj8oRweDYACung6z3IBITVCpQjefEjfm3yjPkAszOz39yYD60Y64DDxGxa5FgIMWFpw/exec'; 
+
+        // Definición de las 5 Candidatas (Puedes cambiar los logos aquí)
+        const candidates = [
+            { id: 'partido1', name: 'Alianza Escolar', logo: 'https://via.placeholder.com/150/1e3a8a/ffffff?text=Logo+1' },
+            { id: 'partido2', name: 'Fuerza Estudiantil', logo: 'https://via.placeholder.com/150/b91c1c/ffffff?text=Logo+2' },
+            { id: 'partido3', name: 'Voces del Futuro', logo: 'https://via.placeholder.com/150/d97706/ffffff?text=Logo+3' },
+            { id: 'partido4', name: 'Innovación Niña María', logo: 'https://via.placeholder.com/150/22c55e/ffffff?text=Logo+4' },
+            { id: 'partido5', name: 'Unidad y Acción', logo: 'https://via.placeholder.com/150/9333ea/ffffff?text=Logo+5' },
+            { id: 'blanco', name: 'Voto en Blanco', logo: 'https://via.placeholder.com/150/e5e7eb/6b7280?text=Blanco' }
+        ];
+
+        // Datos de prueba (fallback) cuando aún no se ha puesto una URL de Apps Script válida
+        const mockPadronData = [
+            { dni: '71234567', nombre: 'María Lucía Flores Quispe', grado: '1ro', seccion: 'A' },
+            { dni: '72345678', nombre: 'Ana Camila Mendoza Torres', grado: '2do', seccion: 'B' },
+            { dni: '73456789', nombre: 'Sofia Valentina Gómez Ruiz', grado: '3ro', seccion: 'A' },
+            { dni: '74567890', nombre: 'Fernanda Isabel Mamani Cruz', grado: '4to', seccion: 'C' },
+            { dni: '75678901', nombre: 'Valeria Nicole Rojas Paredes', grado: '5to', seccion: 'B' }
+        ];
+
+        let padronData = []; // Guardará el padrón descargado
+        let selectedStudent = null;
+        let selectedCandidate = null;
+
+        // Validar si la URL proporcionada es válida
+        function isValidUrl(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === "http:" || url.protocol === "https:";
+            } catch (_) {
+                return false;  
+            }
+        }
+
+        // Cargar lista completa del padrón al iniciar
+        async function fetchPadron() {
+            const loading = document.getElementById('loadingDni');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.innerText = "Cargando padrón electoral...";
+            loading.classList.remove('hidden');
+
+            // Si la URL no ha sido configurada aún, cargamos datos de demostración
+            if (!isValidUrl(APPS_SCRIPT_URL)) {
+                console.warn("APPS_SCRIPT_URL no es una URL válida. Cargando padrón de prueba.");
+                padronData = mockPadronData;
+                loading.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'getPadron' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    padronData = result.padron;
+                } else {
+                    showError("Error al cargar padrón.");
+                }
+            } catch (error) {
+                console.error(error);
+                showError("No se pudo conectar con el servidor. Usando datos de prueba.");
+                padronData = mockPadronData;
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Evento de búsqueda interactiva al escribir
+        function onSearchInput(query) {
+            const resultsContainer = document.getElementById('searchResults');
+            const trimmed = query.trim().toLowerCase();
+            
+            if (trimmed.length < 2) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            // Filtrar por DNI o Nombre
+            const filtered = padronData.filter(student => 
+                student.dni.includes(trimmed) || 
+                student.nombre.toLowerCase().includes(trimmed)
+            );
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `<div class="p-4 text-center text-gray-500 font-medium">No se encontraron coincidencia(s)</div>`;
+            } else {
+                resultsContainer.innerHTML = filtered.slice(0, 8).map(student => `
+                    <div onclick="selectStudent('${student.dni}')" class="p-3 hover:bg-blue-50 cursor-pointer text-left transition flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-colegio-azul">${escapeHtml(student.nombre)}</p>
+                            <p class="text-xs text-gray-500">${student.grado} - ${student.seccion}</p>
+                        </div>
+                        <span class="bg-blue-100 text-colegio-azul text-xs font-bold px-2 py-1 rounded">DNI: ${student.dni}</span>
+                    </div>
+                `).join('');
+            }
+
+            resultsContainer.classList.remove('hidden');
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        // Selección de estudiante desde la lista interactiva
+        function selectStudent(dni) {
+            const student = padronData.find(s => s.dni === dni);
+            if (!student) return;
+
+            selectedStudent = student;
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('dniInput').value = `${student.dni} - ${student.nombre}`;
+
+            // Mostrar pantalla de confirmación de datos
+            document.getElementById('studentName').innerText = student.nombre;
+            document.getElementById('studentGrade').innerText = student.grado;
+            document.getElementById('studentSection').innerText = student.seccion;
+
+            showScreen('screen-verify');
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('dniError');
+            err.innerText = msg;
+            err.classList.remove('hidden');
+        }
+
+        // --- FUNCIONES DE NAVEGACIÓN Y UI ---
+
+        function showScreen(screenId) {
+            document.getElementById('screen-dni').classList.add('hidden');
+            document.getElementById('screen-verify').classList.add('hidden');
+            document.getElementById('screen-ballot').classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function resetSystem() {
+            selectedStudent = null;
+            selectedCandidate = null;
+            document.getElementById('dniInput').value = '';
+            document.getElementById('dniError').classList.add('hidden');
+            document.getElementById('searchResults').classList.add('hidden');
+            showScreen('screen-dni');
+            document.getElementById('dniInput').focus();
+            fetchPadron(); // Recargar el padrón para quitar a quienes ya votaron
+        }
+
+        function renderBallot() {
+            const grid = document.getElementById('candidatesGrid');
+            grid.innerHTML = '';
+            candidates.forEach(c => {
+                const card = document.createElement('div');
+                card.className = `bg-gray-50 border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-colegio-dorado hover:shadow-xl transition flex flex-col items-center justify-center transform hover:-translate-y-1 group`;
+                card.onclick = () => selectCandidate(c);
+                card.innerHTML = `
+                    <div class="h-32 w-32 mb-4 bg-white rounded-full shadow-md border-4 border-transparent group-hover:border-colegio-dorado overflow-hidden p-2 transition-all">
+                        <img src="${c.logo}" alt="${c.name}" class="w-full h-full object-contain">
+                    </div>
+                    <h3 class="text-center font-bold text-gray-800 px-2">${c.name}</h3>
+                    <div class="mt-4 w-6 h-6 rounded-full border-2 border-gray-400 group-hover:border-colegio-dorado flex items-center justify-center">
+                        <div class="w-3 h-3 bg-colegio-dorado rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showBallot() {
+            renderBallot();
+            showScreen('screen-ballot');
+        }
+
+        function selectCandidate(candidate) {
+            selectedCandidate = candidate;
+            document.getElementById('confirmLogo').src = candidate.logo;
+            document.getElementById('confirmName').innerText = candidate.name;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            selectedCandidate = null;
+        }
+
+        // Enviar el Voto a la Base de Datos
+        async function submitVote() {
+            if (!selectedStudent || !selectedCandidate) return;
+
+            const btnSubmit = document.getElementById('btnSubmitVote');
+            const loading = document.getElementById('loadingVote');
+            const buttons = btnSubmit.parentElement;
+
+            buttons.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            // Si no hay URL válida, simulamos el envío exitoso (modo demo)
+            if (!isValidUrl(APPS_SCRIPT_URL)) {
+                setTimeout(() => {
+                    closeConfirmModal();
+                    document.getElementById('successModal').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        document.getElementById('successModal').classList.add('hidden');
+                        resetSystem();
+                        buttons.classList.remove('hidden');
+                        loading.classList.add('hidden');
+                    }, 3000);
+                }, 1000);
+                return;
+            }
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'vote', 
+                        dni: selectedStudent.dni, 
+                        candidate: selectedCandidate.name 
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeConfirmModal();
+                    document.getElementById('successModal').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        document.getElementById('successModal').classList.add('hidden');
+                        resetSystem();
+                    }, 3500);
+
+                } else {
+                    alert("Error: " + result.message);
+                    closeConfirmModal();
+                    resetSystem();
+                }
+            } catch (error) {
+                alert("Hubo un error de conexión al registrar el voto. Llama al docente.");
+                console.error(error);
+            } finally {
+                buttons.classList.remove('hidden');
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Inicializar el sistema al cargar
+        window.onload = () => {
+            resetSystem();
+        };
+    </script>
+</body>
+</html>
