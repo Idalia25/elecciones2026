@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elecciones Municipales - I.E. Santísima Niña María</title>
-    <!-- Tailwind CSS para diseño moderno -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome para íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,9 +14,9 @@
             theme: {
                 extend: {
                     colors: {
-                        'colegio-azul': '#1e3a8a', /* Azul Institucional */
-                        'colegio-rojo': '#b91c1c', /* Rojo Institucional */
-                        'colegio-dorado': '#d97706', /* Dorado/Oro Institucional */
+                        'colegio-azul': '#1e3a8a',
+                        'colegio-rojo': '#b91c1c',
+                        'colegio-dorado': '#d97706',
                     }
                 }
             }
@@ -28,7 +28,6 @@
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Loading Spinner */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a8a; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -51,15 +50,15 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- ÁREA PRINCIPAL -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center relative">
         
-        <!-- PANTALLA 0: BLOQUEO DE SEGURIDAD (SOLO DOCENTES) -->
+        <!-- PANTALLA 0: BLOQUEO DE SEGURIDAD -->
         <div id="screen-locked" class="w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-gray-800">
             <div class="text-center mb-6">
                 <i class="fa-solid fa-lock text-5xl text-gray-700 mb-4"></i>
                 <h2 class="text-3xl font-bold text-gray-800">Mesa de Votación Cerrada</h2>
-                <p class="text-gray-500 mt-2">Este equipo no está autorizado para registrar votos o la sesión no ha iniciado.</p>
+                <p class="text-gray-500 mt-2">Este equipo requiere autorización docente para registrar votos.</p>
             </div>
             <div class="max-w-xs mx-auto text-center mt-6">
                 <p class="text-xs text-gray-400 font-bold uppercase mb-2">Acceso exclusivo docentes</p>
@@ -72,7 +71,7 @@
             </div>
         </div>
 
-        <!-- PANTALLA 1: INGRESO DE DNI -->
+        <!-- PANTALLA 1: INGRESO DE DNI / NOMBRE -->
         <div id="screen-dni" class="hidden w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-azul">
             <div class="text-center mb-6">
                 <i class="fa-solid fa-id-card text-5xl text-colegio-azul mb-4"></i>
@@ -88,9 +87,8 @@
                     <i class="fa-solid fa-search absolute right-4 top-5 text-gray-400 text-xl"></i>
                 </div>
 
-                <!-- Lista Desplegable Autocompletada -->
+                <!-- Lista Desplegable -->
                 <div id="searchResults" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-gray-100">
-                    <!-- Los resultados coincidentes se insertarán aquí por JavaScript -->
                 </div>
 
                 <div id="dniError" class="text-colegio-rojo text-center my-3 hidden font-semibold text-sm"></div>
@@ -102,7 +100,7 @@
             </div>
         </div>
 
-        <!-- PANTALLA 2: DATOS DEL ESTUDIANTE -->
+        <!-- PANTALLA 2: CONFIRMACIÓN DE DATOS (CON NIVEL) -->
         <div id="screen-verify" class="hidden w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-dorado">
             <div class="text-center mb-6">
                 <i class="fa-solid fa-user-check text-5xl text-green-600 mb-4"></i>
@@ -111,15 +109,20 @@
             
             <div class="bg-gray-50 border-l-4 border-colegio-azul p-6 rounded-r-lg max-w-lg mx-auto mb-8 shadow-sm">
                 <p class="text-sm text-gray-500 font-bold uppercase mb-1">Nombre Completo</p>
-                <p id="studentName" class="text-2xl font-bold text-colegio-azul mb-4">Ana Pérez García</p>
-                <div class="flex gap-8">
+                <p id="studentName" class="text-2xl font-bold text-colegio-azul mb-4">-</p>
+                
+                <div class="grid grid-cols-3 gap-4 border-t pt-4 border-gray-200">
                     <div>
-                        <p class="text-sm text-gray-500 font-bold uppercase mb-1">Grado</p>
-                        <p id="studentGrade" class="text-xl font-bold text-gray-800">4to</p>
+                        <p class="text-xs text-gray-500 font-bold uppercase mb-1">Nivel</p>
+                        <p id="studentLevel" class="text-lg font-bold text-colegio-rojo">-</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500 font-bold uppercase mb-1">Sección</p>
-                        <p id="studentSection" class="text-xl font-bold text-gray-800">"B"</p>
+                        <p class="text-xs text-gray-500 font-bold uppercase mb-1">Grado</p>
+                        <p id="studentGrade" class="text-lg font-bold text-gray-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-bold uppercase mb-1">Sección</p>
+                        <p id="studentSection" class="text-lg font-bold text-gray-800">-</p>
                     </div>
                 </div>
             </div>
@@ -141,9 +144,7 @@
                 <p class="text-gray-600 mt-2">Selecciona el logo del partido político de tu preferencia.</p>
             </div>
             
-            <!-- Grid de Candidatas -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="candidatesGrid">
-                <!-- Las tarjetas de candidatas se generan por JS -->
             </div>
         </div>
 
@@ -184,18 +185,15 @@
         <div class="text-white text-lg animate-pulse">Preparando sistema para el siguiente estudiante...</div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA -->
+    <!-- SCRIPT PRINCIPAL -->
     <script>
-        // ==========================================
-        // 🔴 IMPORTANTE: COLOCA AQUÍ LA URL DE TU SCRIPT DE GOOGLE APPS SCRIPT
-        // Ejemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
-        // ==========================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMJkl-XxJefcaFWbjen1I0CwFFCjQeFLzOpNimDtVSkXdZ6lJTEN9IedUrRvUKdUK6og/exec'; 
+        // 🔴 URL DE GOOGLE APPS SCRIPT
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwguYQItaPAbx0-1hTn-U5Gjmd9yI8KKKf_Pj0gUotrNjex6o_WqdUE3gdhqh8kzFrp5g/exec'; 
 
-        // 🔒 CONTRASEÑA SECRETA DEL DOCENTE PARA HABILITAR EL EQUIPO
+        // 🔒 CONTRASEÑA SECRETA DEL DOCENTE
         const ADMIN_PASSWORD = 'snm2026';
 
-        // Definición de las 5 Candidatas (Puedes cambiar los logos aquí)
+        // Candidatas
         const candidates = [
             { id: 'partido1', name: 'Alianza Escolar', logo: 'https://via.placeholder.com/150/1e3a8a/ffffff?text=Logo+1' },
             { id: 'partido2', name: 'Fuerza Estudiantil', logo: 'https://via.placeholder.com/150/b91c1c/ffffff?text=Logo+2' },
@@ -205,30 +203,25 @@
             { id: 'blanco', name: 'Voto en Blanco', logo: 'https://via.placeholder.com/150/e5e7eb/6b7280?text=Blanco' }
         ];
 
-        // Datos de prueba (fallback) cuando aún no se ha puesto una URL de Apps Script válida
+        // Datos de prueba con campo Nivel
         const mockPadronData = [
-            { dni: '71234567', nombre: 'María Lucía Flores Quispe', grado: '1ro', seccion: 'A' },
-            { dni: '72345678', nombre: 'Ana Camila Mendoza Torres', grado: '2do', seccion: 'B' },
-            { dni: '73456789', nombre: 'Sofia Valentina Gómez Ruiz', grado: '3ro', seccion: 'A' },
-            { dni: '74567890', nombre: 'Fernanda Isabel Mamani Cruz', grado: '4to', seccion: 'C' },
-            { dni: '75678901', nombre: 'Valeria Nicole Rojas Paredes', grado: '5to', seccion: 'B' }
+            { dni: '71234567', nombre: 'María Lucía Flores Quispe', grado: '5to', seccion: 'A', nivel: 'Primaria' },
+            { dni: '72345678', nombre: 'Ana Camila Mendoza Torres', grado: '6to', seccion: 'B', nivel: 'Primaria' },
+            { dni: '73456789', nombre: 'Sofia Valentina Gómez Ruiz', grado: '1ro', seccion: 'A', nivel: 'Secundaria' },
+            { dni: '74567890', nombre: 'Fernanda Isabel Mamani Cruz', grado: '4to', seccion: 'C', nivel: 'Secundaria' }
         ];
 
-        let padronData = []; // Guardará el padrón descargado
+        let padronData = [];
         let selectedStudent = null;
         let selectedCandidate = null;
 
-        // Validar si la URL proporcionada es válida
         function isValidUrl(string) {
             try {
                 const url = new URL(string);
                 return url.protocol === "http:" || url.protocol === "https:";
-            } catch (_) {
-                return false;  
-            }
+            } catch (_) { return false; }
         }
 
-        // Cargar lista completa del padrón al iniciar
         async function fetchPadron() {
             const loading = document.getElementById('loadingDni');
             const loadingText = document.getElementById('loadingText');
@@ -236,20 +229,17 @@
             loading.classList.remove('hidden');
 
             if (!isValidUrl(APPS_SCRIPT_URL)) {
-                console.warn("URL no válida. Modo prueba.");
                 padronData = mockPadronData;
                 loading.classList.add('hidden');
                 return;
             }
 
             try {
-                // Enviar petición sin cabeceras complejas para evitar bloqueos CORS
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'getPadron' })
                 });
 
-                // Leemos como texto primero por si Google devuelve un error en HTML
                 const textResponse = await response.text();
                 
                 try {
@@ -261,19 +251,16 @@
                         showError("Error en tu Base de Datos: " + result.message);
                     }
                 } catch (parseError) {
-                    console.error("Respuesta de Google no es JSON:", textResponse);
                     showError("Error de permisos. Asegúrate de publicar el script para 'Cualquier persona'.");
                 }
             } catch (error) {
-                console.error("Error de Red:", error);
-                showError("Fallo de red o CORS: " + error.message);
-                padronData = mockPadronData; // Cargar prueba para no bloquear a la estudiante
+                showError("Fallo de red: " + error.message);
+                padronData = mockPadronData;
             } finally {
                 loading.classList.add('hidden');
             }
         }
 
-        // Evento de búsqueda interactiva al escribir
         function onSearchInput(query) {
             const resultsContainer = document.getElementById('searchResults');
             const trimmed = query.trim().toLowerCase();
@@ -284,7 +271,6 @@
                 return;
             }
 
-            // Filtrar por DNI o Nombre
             const filtered = padronData.filter(student => 
                 student.dni.includes(trimmed) || 
                 student.nombre.toLowerCase().includes(trimmed)
@@ -297,7 +283,7 @@
                     <div onclick="selectStudent('${student.dni}')" class="p-3 hover:bg-blue-50 cursor-pointer text-left transition flex justify-between items-center">
                         <div>
                             <p class="font-bold text-colegio-azul">${escapeHtml(student.nombre)}</p>
-                            <p class="text-xs text-gray-500">${student.grado} - ${student.seccion}</p>
+                            <p class="text-xs text-gray-500">${student.nivel} | ${student.grado} - ${student.seccion}</p>
                         </div>
                         <span class="bg-blue-100 text-colegio-azul text-xs font-bold px-2 py-1 rounded">DNI: ${student.dni}</span>
                     </div>
@@ -313,7 +299,6 @@
             });
         }
 
-        // Selección de estudiante desde la lista interactiva
         function selectStudent(dni) {
             const student = padronData.find(s => s.dni === dni);
             if (!student) return;
@@ -322,8 +307,8 @@
             document.getElementById('searchResults').classList.add('hidden');
             document.getElementById('dniInput').value = `${student.dni} - ${student.nombre}`;
 
-            // Mostrar pantalla de confirmación de datos
             document.getElementById('studentName').innerText = student.nombre;
+            document.getElementById('studentLevel').innerText = student.nivel || '-';
             document.getElementById('studentGrade').innerText = student.grado;
             document.getElementById('studentSection').innerText = student.seccion;
 
@@ -336,8 +321,6 @@
             err.classList.remove('hidden');
         }
 
-        // --- FUNCIONES DE NAVEGACIÓN Y UI ---
-
         function showScreen(screenId) {
             document.getElementById('screen-locked').classList.add('hidden');
             document.getElementById('screen-dni').classList.add('hidden');
@@ -346,9 +329,7 @@
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // Funciones de Seguridad de Mesa
         function checkSecurity() {
-            // Verifica si el equipo actual ya fue desbloqueado previamente por el profesor
             if (localStorage.getItem('mesa_autorizada') === 'true') {
                 resetSystem();
             } else {
@@ -359,7 +340,6 @@
         function unlockStation() {
             const pass = document.getElementById('adminPassword').value;
             if (pass === ADMIN_PASSWORD) {
-                // Guardar la autorización en la memoria del navegador del colegio
                 localStorage.setItem('mesa_autorizada', 'true');
                 document.getElementById('adminPassword').value = '';
                 document.getElementById('lockError').classList.add('hidden');
@@ -367,13 +347,6 @@
             } else {
                 document.getElementById('lockError').classList.remove('hidden');
             }
-        }
-
-        // Opción oculta: Para que el profe pueda volver a bloquear la máquina al final del día
-        // (Se puede llamar desde la consola del navegador escribiendo lockStation() )
-        function lockStation() {
-            localStorage.removeItem('mesa_autorizada');
-            showScreen('screen-locked');
         }
 
         function resetSystem() {
@@ -384,7 +357,7 @@
             document.getElementById('searchResults').classList.add('hidden');
             showScreen('screen-dni');
             document.getElementById('dniInput').focus();
-            fetchPadron(); // Recargar el padrón para quitar a quienes ya votaron
+            fetchPadron();
         }
 
         function renderBallot() {
@@ -424,7 +397,6 @@
             selectedCandidate = null;
         }
 
-        // Enviar el Voto a la Base de Datos
         async function submitVote() {
             if (!selectedStudent || !selectedCandidate) return;
 
@@ -463,7 +435,7 @@
                     resetSystem();
                 }
             } catch (error) {
-                alert("Hubo un error de conexión al registrar el voto. Llama al docente.");
+                alert("Hubo un error de conexión al registrar el voto.");
                 console.error(error);
             } finally {
                 buttons.classList.remove('hidden');
@@ -471,9 +443,8 @@
             }
         }
 
-        // Inicializar el sistema al cargar
         window.onload = () => {
-            checkSecurity(); // Primero revisa si la máquina está desbloqueada
+            checkSecurity();
         };
     </script>
 </body>
