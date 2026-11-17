@@ -76,19 +76,17 @@
             <div class="text-center mb-6">
                 <i class="fa-solid fa-id-card text-5xl text-colegio-azul mb-4"></i>
                 <h2 class="text-3xl font-bold text-gray-800">Bienvenida Estudiante</h2>
-                <p class="text-gray-500 mt-2">Empieza a escribir tu DNI o tus Nombres para buscarte en el padrón.</p>
+                <p class="text-gray-500 mt-2">Ingresa tu número exacto de DNI para votar.</p>
             </div>
             
             <div class="max-w-md mx-auto relative">
-                <div class="mb-2 relative">
-                    <input type="text" id="dniInput" placeholder="Busca por DNI o Nombre..." autocomplete="off"
-                        oninput="onSearchInput(this.value)"
+                <div class="mb-4 relative flex gap-2">
+                    <input type="tel" id="dniInput" maxlength="8" placeholder="Ej: 71234567" autocomplete="off"
+                        onkeypress="if(event.key === 'Enter') searchExactDNI()"
                         class="w-full text-center text-2xl font-bold px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-colegio-azul focus:ring-4 focus:ring-blue-100 transition shadow-inner">
-                    <i class="fa-solid fa-search absolute right-4 top-5 text-gray-400 text-xl"></i>
-                </div>
-
-                <!-- Lista Desplegable -->
-                <div id="searchResults" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-gray-100">
+                    <button onclick="searchExactDNI()" class="bg-colegio-azul hover:bg-blue-800 text-white font-bold px-6 rounded-xl shadow-lg transition">
+                        <i class="fa-solid fa-search text-xl"></i> Buscar
+                    </button>
                 </div>
 
                 <div id="dniError" class="text-colegio-rojo text-center my-3 hidden font-semibold text-sm"></div>
@@ -193,11 +191,11 @@
         // 🔒 CONTRASEÑA SECRETA DEL DOCENTE
         const ADMIN_PASSWORD = 'snm2026';
 
-        // Candidatas id: 'partido1',
+        // Candidatas y Voto en Blanco
         const candidates = [
-            { id: 'partido1', name: 'Pompom Legacy', logo: './Logo3.jpeg'},
-            { id: 'partido2', name: 'M.U.S.E', logo: './Logo4.jpeg' },
-             { id: 'blanco', name: 'Voto en Blanco', logo: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiM5Y2EzYWYiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJMQU5DTzwvdGV4dD48L3N2Zz4=' }
+            { id: 'partido1', name: 'Pompom Legacy', logo: './logo3.jpeg' },
+            { id: 'partido2', name: 'M.U.S.E', logo: './logo4.jpeg' },
+            { id: 'blanco', name: 'Voto en Blanco', logo: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiM5Y2EzYWYiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJMQU5DTzwvdGV4dD48L3N2Zz4=' }
         ];
 
         // Datos de prueba con campo Nivel
@@ -211,6 +209,10 @@
         let padronData = [];
         let selectedStudent = null;
         let selectedCandidate = null;
+
+        // ⏱️ Variables para el temporizador de inactividad
+        let inactivityTimer = null;
+        const TIME_LIMIT = 45; // Segundos permitidos para votar
 
         function isValidUrl(string) {
             try {
@@ -258,52 +260,25 @@
             }
         }
 
-        function onSearchInput(query) {
-            const resultsContainer = document.getElementById('searchResults');
-            const trimmed = query.trim().toLowerCase();
+        // 🛡️ Búsqueda Estricta de DNI (Reemplaza la función anterior)
+        function searchExactDNI() {
+            const dni = document.getElementById('dniInput').value.trim();
             
-            if (trimmed.length < 2) {
-                resultsContainer.innerHTML = '';
-                resultsContainer.classList.add('hidden');
+            if (dni.length !== 8 || isNaN(dni)) {
+                showError("Por favor, ingresa un DNI válido de 8 números.");
                 return;
             }
 
-            const filtered = padronData.filter(student => 
-                student.dni.includes(trimmed) || 
-                student.nombre.toLowerCase().includes(trimmed)
-            );
-
-            if (filtered.length === 0) {
-                resultsContainer.innerHTML = `<div class="p-4 text-center text-gray-500 font-medium">No se encontraron coincidencia(s)</div>`;
-            } else {
-                resultsContainer.innerHTML = filtered.slice(0, 8).map(student => `
-                    <div onclick="selectStudent('${student.dni}')" class="p-3 hover:bg-blue-50 cursor-pointer text-left transition flex justify-between items-center">
-                        <div>
-                            <p class="font-bold text-colegio-azul">${escapeHtml(student.nombre)}</p>
-                            <p class="text-xs text-gray-500">${student.nivel} | ${student.grado} - ${student.seccion}</p>
-                        </div>
-                        <span class="bg-blue-100 text-colegio-azul text-xs font-bold px-2 py-1 rounded">DNI: ${student.dni}</span>
-                    </div>
-                `).join('');
+            const student = padronData.find(s => s.dni === dni);
+            
+            if (!student) {
+                showError("DNI no encontrado o ya emitió su voto.");
+                return;
             }
 
-            resultsContainer.classList.remove('hidden');
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
-        }
-
-        function selectStudent(dni) {
-            const student = padronData.find(s => s.dni === dni);
-            if (!student) return;
-
+            document.getElementById('dniError').classList.add('hidden');
+            
             selectedStudent = student;
-            document.getElementById('searchResults').classList.add('hidden');
-            document.getElementById('dniInput').value = `${student.dni} - ${student.nombre}`;
-
             document.getElementById('studentName').innerText = student.nombre;
             document.getElementById('studentLevel').innerText = student.nivel || '-';
             document.getElementById('studentGrade').innerText = student.grado;
@@ -318,12 +293,31 @@
             err.classList.remove('hidden');
         }
 
+        // ⏱️ Control del temporizador
+        function resetTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert("⏳ Tiempo agotado por inactividad. La sesión se reiniciará por seguridad.");
+                resetSystem();
+            }, TIME_LIMIT * 1000);
+        }
+
         function showScreen(screenId) {
             document.getElementById('screen-locked').classList.add('hidden');
             document.getElementById('screen-dni').classList.add('hidden');
             document.getElementById('screen-verify').classList.add('hidden');
             document.getElementById('screen-ballot').classList.add('hidden');
             document.getElementById(screenId).classList.remove('hidden');
+
+            // Iniciar temporizador solo si está verificando o votando
+            if (screenId === 'screen-verify' || screenId === 'screen-ballot') {
+                resetTimer();
+                // Reiniciar el tiempo si el usuario toca la pantalla
+                document.getElementById(screenId).onclick = resetTimer;
+                document.getElementById(screenId).oninput = resetTimer;
+            } else {
+                clearTimeout(inactivityTimer);
+            }
         }
 
         function checkSecurity() {
@@ -347,11 +341,12 @@
         }
 
         function resetSystem() {
+            clearTimeout(inactivityTimer); // Detener reloj al reiniciar
             selectedStudent = null;
             selectedCandidate = null;
             document.getElementById('dniInput').value = '';
             document.getElementById('dniError').classList.add('hidden');
-            document.getElementById('searchResults').classList.add('hidden');
+            // Nota: Se elimina la referencia a searchResults
             showScreen('screen-dni');
             document.getElementById('dniInput').focus();
             fetchPadron();
@@ -365,7 +360,7 @@
                 card.className = `bg-gray-50 border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-colegio-dorado hover:shadow-xl transition flex flex-col items-center justify-center transform hover:-translate-y-1 group`;
                 card.onclick = () => selectCandidate(c);
                 card.innerHTML = `
-                    <div class="h-32 w-32 mb-4 bg-white rounded-full shadow-md border-4 border-transparent group-hover:border-colegio-dorado overflow-hidden p-2 transition-all">
+                    <div class="h-32 w-32 mb-4 bg-white rounded-full shadow-md border-4 border-transparent group-hover:border-colegio-dorado overflow-hidden p-2 transition-all flex items-center justify-center">
                         <img src="${c.logo}" alt="${c.name}" class="w-full h-full object-contain">
                     </div>
                     <h3 class="text-center font-bold text-gray-800 px-2">${c.name}</h3>
