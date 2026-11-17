@@ -50,10 +50,15 @@
         </div>
     </header>
 
+    <!-- ⏱️ Indicador de Tiempo (Flotante) -->
+    <div id="timerDisplay" class="hidden fixed top-4 right-4 bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg z-50 transition-colors duration-300">
+        <i class="fa-solid fa-stopwatch mr-2"></i> <span id="timeRemaining">45</span>s
+    </div>
+
     <!-- ÁREA PRINCIPAL -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center relative">
         
-        <!-- PANTALLA 0: BLOQUEO DE SEGURIDAD. -->
+        <!-- PANTALLA 0: BLOQUEO DE SEGURIDAD -->
         <div id="screen-locked" class="w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-gray-800">
             <div class="text-center mb-6">
                 <i class="fa-solid fa-lock text-5xl text-gray-700 mb-4"></i>
@@ -193,9 +198,8 @@
 
         // Candidatas y Voto en Blanco
         const candidates = [
-            
-             { id: 'partido1', name: 'Pompom Legacy', logo: 'Logo3.jpeg' },
-            { id: 'partido2', name: 'M.U.S.E', logo: 'Logo4.jpeg' },
+            { id: 'partido1', name: 'Pompom Legacy', logo: 'logo3.jpg' },
+            { id: 'partido2', name: 'M.U.S.E', logo: 'logo4.jpg' },
             { id: 'blanco', name: 'Voto en Blanco', logo: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiM5Y2EzYWYiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJMQU5DTzwvdGV4dD48L3N2Zz4=' }
         ];
 
@@ -212,7 +216,7 @@
         let selectedCandidate = null;
 
         // ⏱️ Variables para el temporizador de inactividad
-        let inactivityTimer = null;
+        let countdownInterval = null;
         const TIME_LIMIT = 45; // Segundos permitidos para votar
 
         function isValidUrl(string) {
@@ -294,13 +298,36 @@
             err.classList.remove('hidden');
         }
 
-        // ⏱️ Control del temporizador
+        // ⏱️ Control del temporizador visual
         function resetTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                alert("⏳ Tiempo agotado por inactividad. La sesión se reiniciará por seguridad.");
-                resetSystem();
-            }, TIME_LIMIT * 1000);
+            clearInterval(countdownInterval);
+            
+            let timeLeft = TIME_LIMIT;
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timeRemainingText = document.getElementById('timeRemaining');
+            
+            timerDisplay.classList.remove('hidden');
+            timerDisplay.classList.remove('bg-red-600', 'animate-pulse');
+            timerDisplay.classList.add('bg-gray-800');
+            timeRemainingText.innerText = timeLeft;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                timeRemainingText.innerText = timeLeft;
+                
+                // Cambiar a rojo y parpadear cuando queden 10 segundos
+                if (timeLeft === 10) {
+                    timerDisplay.classList.remove('bg-gray-800');
+                    timerDisplay.classList.add('bg-red-600', 'animate-pulse');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    timerDisplay.classList.add('hidden');
+                    alert("⏳ Tiempo agotado. La sesión se reiniciará por seguridad.");
+                    resetSystem();
+                }
+            }, 1000);
         }
 
         function showScreen(screenId) {
@@ -317,7 +344,9 @@
                 document.getElementById(screenId).onclick = resetTimer;
                 document.getElementById(screenId).oninput = resetTimer;
             } else {
-                clearTimeout(inactivityTimer);
+                clearInterval(countdownInterval);
+                const timerDisplay = document.getElementById('timerDisplay');
+                if (timerDisplay) timerDisplay.classList.add('hidden');
             }
         }
 
@@ -342,7 +371,7 @@
         }
 
         function resetSystem() {
-            clearTimeout(inactivityTimer); // Detener reloj al reiniciar
+            clearInterval(countdownInterval); // Detener reloj al reiniciar
             selectedStudent = null;
             selectedCandidate = null;
             document.getElementById('dniInput').value = '';
@@ -392,6 +421,10 @@
 
         async function submitVote() {
             if (!selectedStudent || !selectedCandidate) return;
+
+            clearInterval(countdownInterval); // 🛑 Detener el reloj mientras guarda el voto para evitar cortes
+            const timerDisplay = document.getElementById('timerDisplay');
+            if (timerDisplay) timerDisplay.classList.add('hidden');
 
             const btnSubmit = document.getElementById('btnSubmitVote');
             const loading = document.getElementById('loadingVote');
