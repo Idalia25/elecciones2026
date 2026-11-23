@@ -50,9 +50,10 @@
         </div>
     </header>
 
-    <!-- ⏱️ Indicador de Tiempo (Flotante) -->
-    <div id="timerDisplay" class="hidden fixed top-4 right-4 bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg z-50 transition-colors duration-300">
-        <i class="fa-solid fa-stopwatch mr-2"></i> <span id="timeRemaining">45</span>s
+    <!-- Reloj Temporizador Flotante -->
+    <div id="timerBadge" class="hidden fixed top-24 right-4 z-40 bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 font-bold text-lg transition-colors">
+        <i class="fa-regular fa-clock"></i>
+        <span id="timerDisplay">45s</span>
     </div>
 
     <!-- ÁREA PRINCIPAL -->
@@ -67,7 +68,8 @@
             </div>
             <div class="max-w-xs mx-auto text-center mt-6">
                 <p class="text-xs text-gray-400 font-bold uppercase mb-2">Acceso exclusivo docentes</p>
-                <input type="password" id="elecsnm2026" placeholder="Contraseña de autorización" 
+                <input type="password" id="adminPassword" placeholder="Contraseña de autorización"
+                    onkeypress="if(event.key === 'Enter') unlockStation()"
                     class="w-full text-center px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-800 mb-4">
                 <button onclick="unlockStation()" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-6 rounded-xl transition shadow-lg">
                     Habilitar Equipo
@@ -76,27 +78,28 @@
             </div>
         </div>
 
-        <!-- PANTALLA 1: INGRESO DE DNI / NOMBRE -->
+        <!-- PANTALLA 1: INGRESO DE DNI ESTRICTO -->
         <div id="screen-dni" class="hidden w-full bg-white rounded-2xl shadow-2xl p-8 fade-in border-t-8 border-colegio-azul">
             <div class="text-center mb-6">
                 <i class="fa-solid fa-id-card text-5xl text-colegio-azul mb-4"></i>
                 <h2 class="text-3xl font-bold text-gray-800">Bienvenida Estudiante</h2>
-                <p class="text-gray-500 mt-2">Ingresa tu número exacto de DNI para votar.</p>
+                <p class="text-gray-500 mt-2">Ingresa tu número de DNI exacto (8 dígitos) para votar.</p>
             </div>
             
-            <div class="max-w-md mx-auto relative">
-                <div class="mb-4 relative flex gap-2">
-                    <input type="tel" id="dniInput" maxlength="8" placeholder="Ej: 71234567" autocomplete="off"
-                        onkeypress="if(event.key === 'Enter') searchExactDNI()"
-                        class="w-full text-center text-2xl font-bold px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-colegio-azul focus:ring-4 focus:ring-blue-100 transition shadow-inner">
-                    <button onclick="searchExactDNI()" class="bg-colegio-azul hover:bg-blue-800 text-white font-bold px-6 rounded-xl shadow-lg transition">
-                        <i class="fa-solid fa-search text-xl"></i> Buscar
-                    </button>
+            <div class="max-w-md mx-auto">
+                <div class="mb-4">
+                    <input type="text" id="dniInput" maxlength="8" inputmode="numeric" placeholder="Ingresa tu DNI (8 dígitos)" autocomplete="off"
+                        onkeypress="if(event.key === 'Enter') verifyDni()"
+                        class="w-full text-center text-2xl font-bold tracking-widest px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-colegio-azul focus:ring-4 focus:ring-blue-100 transition shadow-inner">
                 </div>
 
-                <div id="dniError" class="text-colegio-rojo text-center my-3 hidden font-semibold text-sm"></div>
+                <button onclick="verifyDni()" id="btnVerifyDni" class="w-full bg-colegio-azul hover:bg-blue-900 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-lg transition">
+                    <i class="fa-solid fa-magnifying-glass mr-2"></i> Buscar DNI
+                </button>
 
-                <div id="loadingDni" class="mt-4 text-center">
+                <div id="dniError" class="text-colegio-rojo text-center my-4 hidden font-semibold text-sm bg-red-50 p-3 rounded-lg border border-red-200"></div>
+
+                <div id="loadingDni" class="mt-4 text-center hidden">
                     <div class="loader"></div>
                     <p class="text-gray-500 mt-2 font-medium" id="loadingText">Cargando padrón electoral...</p>
                 </div>
@@ -157,7 +160,7 @@
     <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden fade-in backdrop-blur-sm px-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-b-8 border-colegio-dorado">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">¿Confirmar Voto?</h3>
-            <p class="text-gray-600 mb-6">Estás a punto de emitir tu voto por el partido:</p>
+            <p class="text-gray-600 mb-6">Estás a punto de emitir tu voto por:</p>
             
             <div class="bg-blue-50 p-4 rounded-xl mb-8 flex flex-col items-center border border-blue-100">
                 <img id="confirmLogo" src="" alt="Logo" class="w-20 h-20 object-contain mb-2">
@@ -194,16 +197,21 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbweBXvwlvKMWFHS1Jg83kcxcqn0X7y79nRiMsNdWhQPkexnVdO-uZRb3-oQDZUnnxC8Xg/exec'; 
 
         // 🔒 CONTRASEÑA SECRETA DEL DOCENTE
-        const ADMIN_PASSWORD = 'snm2026';
+        const ADMIN_PASSWORD = 'elecsnm2026*';
+        const STORAGE_AUTH_KEY = 'mesa_autorizada_2026';
 
-        // Candidatas y Voto en Blanco
+        // Candidatas
         const candidates = [
             { id: 'partido1', name: 'Pompom Legacy', logo: 'Logo3.jpeg' },
             { id: 'partido2', name: 'M.U.S.E', logo: 'Logo4.jpeg' },
-            { id: 'blanco', name: 'Voto en Blanco', logo: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiM5Y2EzYWYiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJMQU5DTzwvdGV4dD48L3N2Zz4=' }
+            { 
+                id: 'blanco', 
+                name: 'Voto en Blanco', 
+                logo: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyOCIgZm9udC13ZWlnaHQ9ImJvbGQiPkJMQU5DTzwvdGV4dD48L3N2Zz4=' 
+            }
         ];
 
-        // Datos de prueba con campo Nivel
+        // Datos de prueba
         const mockPadronData = [
             { dni: '71234567', nombre: 'María Lucía Flores Quispe', grado: '5to', seccion: 'A', nivel: 'Primaria' },
             { dni: '72345678', nombre: 'Ana Camila Mendoza Torres', grado: '6to', seccion: 'B', nivel: 'Primaria' },
@@ -214,10 +222,51 @@
         let padronData = [];
         let selectedStudent = null;
         let selectedCandidate = null;
+        
+        // Variables del temporizador
+        const TIME_LIMIT = 45;
+        let timeLeft = TIME_LIMIT;
+        let timerInterval = null;
 
-        // ⏱️ Variables para el temporizador de inactividad
-        let countdownInterval = null;
-        const TIME_LIMIT = 45; // Segundos permitidos para votar
+        function startTimer() {
+            stopTimer();
+            timeLeft = TIME_LIMIT;
+            updateTimerUI();
+            document.getElementById('timerBadge').classList.remove('hidden');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    closeConfirmModal();
+                    alert("Tiempo agotado por inactividad. Por seguridad, vuelve a ingresar tu DNI.");
+                    resetSystem();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            document.getElementById('timerBadge').classList.add('hidden');
+        }
+
+        function updateTimerUI() {
+            const badge = document.getElementById('timerBadge');
+            const display = document.getElementById('timerDisplay');
+            display.innerText = `${timeLeft}s`;
+
+            if (timeLeft <= 10) {
+                badge.classList.remove('bg-gray-800');
+                badge.classList.add('bg-colegio-rojo', 'animate-pulse');
+            } else {
+                badge.classList.remove('bg-colegio-rojo', 'animate-pulse');
+                badge.classList.add('bg-gray-800');
+            }
+        }
 
         function isValidUrl(string) {
             try {
@@ -265,31 +314,32 @@
             }
         }
 
-        // 🛡️ Búsqueda Estricta de DNI (Reemplaza la función anterior)
-        function searchExactDNI() {
-            const dni = document.getElementById('dniInput').value.trim();
-            
-            if (dni.length !== 8 || isNaN(dni)) {
-                showError("Por favor, ingresa un DNI válido de 8 números.");
+        function verifyDni() {
+            const dniInput = document.getElementById('dniInput').value.trim();
+            const err = document.getElementById('dniError');
+
+            if (dniInput.length !== 8 || isNaN(dniInput)) {
+                showError("Por favor, ingresa un número de DNI válido de 8 dígitos.");
                 return;
             }
 
-            const student = padronData.find(s => s.dni === dni);
-            
+            const student = padronData.find(s => String(s.dni).trim() === dniInput);
+
             if (!student) {
-                showError("DNI no encontrado o ya emitió su voto.");
+                showError("DNI no encontrado en el padrón electoral o ya emitió su voto.");
                 return;
             }
 
-            document.getElementById('dniError').classList.add('hidden');
-            
+            err.classList.add('hidden');
             selectedStudent = student;
+
             document.getElementById('studentName').innerText = student.nombre;
             document.getElementById('studentLevel').innerText = student.nivel || '-';
             document.getElementById('studentGrade').innerText = student.grado;
             document.getElementById('studentSection').innerText = student.seccion;
 
             showScreen('screen-verify');
+            startTimer();
         }
 
         function showError(msg) {
@@ -298,70 +348,27 @@
             err.classList.remove('hidden');
         }
 
-        // ⏱️ Control del temporizador visual
-        function resetTimer() {
-            clearInterval(countdownInterval);
-            
-            let timeLeft = TIME_LIMIT;
-            const timerDisplay = document.getElementById('timerDisplay');
-            const timeRemainingText = document.getElementById('timeRemaining');
-            
-            timerDisplay.classList.remove('hidden');
-            timerDisplay.classList.remove('bg-red-600', 'animate-pulse');
-            timerDisplay.classList.add('bg-gray-800');
-            timeRemainingText.innerText = timeLeft;
-
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                timeRemainingText.innerText = timeLeft;
-                
-                // Cambiar a rojo y parpadear cuando queden 10 segundos
-                if (timeLeft === 10) {
-                    timerDisplay.classList.remove('bg-gray-800');
-                    timerDisplay.classList.add('bg-red-600', 'animate-pulse');
-                }
-
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    timerDisplay.classList.add('hidden');
-                    alert("⏳ Tiempo agotado. La sesión se reiniciará por seguridad.");
-                    resetSystem();
-                }
-            }, 1000);
-        }
-
         function showScreen(screenId) {
             document.getElementById('screen-locked').classList.add('hidden');
             document.getElementById('screen-dni').classList.add('hidden');
             document.getElementById('screen-verify').classList.add('hidden');
             document.getElementById('screen-ballot').classList.add('hidden');
             document.getElementById(screenId).classList.remove('hidden');
-
-            // Iniciar temporizador solo si está verificando o votando
-            if (screenId === 'screen-verify' || screenId === 'screen-ballot') {
-                resetTimer();
-                // Reiniciar el tiempo si el usuario toca la pantalla
-                document.getElementById(screenId).onclick = resetTimer;
-                document.getElementById(screenId).oninput = resetTimer;
-            } else {
-                clearInterval(countdownInterval);
-                const timerDisplay = document.getElementById('timerDisplay');
-                if (timerDisplay) timerDisplay.classList.add('hidden');
-            }
         }
 
         function checkSecurity() {
-            if (localStorage.getItem('mesa_autorizada') === 'true') {
+            if (localStorage.getItem(STORAGE_AUTH_KEY) === 'true') {
                 resetSystem();
             } else {
                 showScreen('screen-locked');
+                document.getElementById('adminPassword').focus();
             }
         }
 
         function unlockStation() {
             const pass = document.getElementById('adminPassword').value;
             if (pass === ADMIN_PASSWORD) {
-                localStorage.setItem('mesa_autorizada', 'true');
+                localStorage.setItem(STORAGE_AUTH_KEY, 'true');
                 document.getElementById('adminPassword').value = '';
                 document.getElementById('lockError').classList.add('hidden');
                 resetSystem();
@@ -371,12 +378,11 @@
         }
 
         function resetSystem() {
-            clearInterval(countdownInterval); // Detener reloj al reiniciar
+            stopTimer();
             selectedStudent = null;
             selectedCandidate = null;
             document.getElementById('dniInput').value = '';
             document.getElementById('dniError').classList.add('hidden');
-            // Nota: Se elimina la referencia a searchResults
             showScreen('screen-dni');
             document.getElementById('dniInput').focus();
             fetchPadron();
@@ -390,7 +396,7 @@
                 card.className = `bg-gray-50 border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-colegio-dorado hover:shadow-xl transition flex flex-col items-center justify-center transform hover:-translate-y-1 group`;
                 card.onclick = () => selectCandidate(c);
                 card.innerHTML = `
-                    <div class="h-32 w-32 mb-4 bg-white rounded-full shadow-md border-4 border-transparent group-hover:border-colegio-dorado overflow-hidden p-2 transition-all flex items-center justify-center">
+                    <div class="h-32 w-32 mb-4 bg-white rounded-full shadow-md border-4 border-transparent group-hover:border-colegio-dorado overflow-hidden p-2 transition-all">
                         <img src="${c.logo}" alt="${c.name}" class="w-full h-full object-contain">
                     </div>
                     <h3 class="text-center font-bold text-gray-800 px-2">${c.name}</h3>
@@ -405,6 +411,7 @@
         function showBallot() {
             renderBallot();
             showScreen('screen-ballot');
+            startTimer(); // Reinicia los 45s al pasar a la cédula
         }
 
         function selectCandidate(candidate) {
@@ -422,9 +429,7 @@
         async function submitVote() {
             if (!selectedStudent || !selectedCandidate) return;
 
-            clearInterval(countdownInterval); // 🛑 Detener el reloj mientras guarda el voto para evitar cortes
-            const timerDisplay = document.getElementById('timerDisplay');
-            if (timerDisplay) timerDisplay.classList.add('hidden');
+            stopTimer(); // Pausa el reloj mientras se guarda el voto
 
             const btnSubmit = document.getElementById('btnSubmitVote');
             const loading = document.getElementById('loadingVote');
@@ -437,7 +442,12 @@
                 setTimeout(() => {
                     closeConfirmModal();
                     document.getElementById('successModal').classList.remove('hidden');
-                    setTimeout(() => { document.getElementById('successModal').classList.add('hidden'); resetSystem(); buttons.classList.remove('hidden'); loading.classList.add('hidden'); }, 3000);
+                    setTimeout(() => { 
+                        document.getElementById('successModal').classList.add('hidden'); 
+                        resetSystem(); 
+                        buttons.classList.remove('hidden'); 
+                        loading.classList.add('hidden'); 
+                    }, 3000);
                 }, 1000);
                 return;
             }
@@ -454,7 +464,10 @@
                 if (result.success) {
                     closeConfirmModal();
                     document.getElementById('successModal').classList.remove('hidden');
-                    setTimeout(() => { document.getElementById('successModal').classList.add('hidden'); resetSystem(); }, 3500);
+                    setTimeout(() => { 
+                        document.getElementById('successModal').classList.add('hidden'); 
+                        resetSystem(); 
+                    }, 3500);
                 } else {
                     alert("Error al votar: " + result.message);
                     closeConfirmModal();
@@ -463,6 +476,7 @@
             } catch (error) {
                 alert("Hubo un error de conexión al registrar el voto.");
                 console.error(error);
+                startTimer();
             } finally {
                 buttons.classList.remove('hidden');
                 loading.classList.add('hidden');
